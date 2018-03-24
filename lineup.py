@@ -50,8 +50,8 @@ def get_players():
                     'version=v4')
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
-    spreadsheetId = '1qlmLb8Sqo-qP0FUJYUyNwuil9bNTFi1tURFvv0H5a7Q'
-    rangeName = 'Offense!B2:N12'
+    spreadsheetId = '1rYfknccqzbA_hI2lpq7NoabSCHlS3fr9QY6pDfD2Eho'
+    rangeName = 'Offense!B2:P14'
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeName).execute()
     values = result.get('values', [])
