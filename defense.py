@@ -124,6 +124,9 @@ def main():
             elif cursum == bestsum:
                 if curmax > bestmax:
                     continue
+                elif curmax == bestmax:
+                    if random.randint(0, 1):
+                        continue
             bestsum = cursum
             bestmax = curmax
             bestlineup = curlineup
