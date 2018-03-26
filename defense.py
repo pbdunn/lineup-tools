@@ -73,50 +73,46 @@ def prune_players(players):
             del players[player]
     return players
 
-def configure_lineup(players):
-    if len(players) == 13:
+def configure_lineup(numplayers):
+    if numplayers == 13:
         return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 11, 11]
-    elif len(players) == 12:
+    elif numplayers == 12:
         return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 11]
-    elif len(players) == 11:
+    elif numplayers == 11:
         return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
-    elif len(players) == 10:
+    elif numplayers == 10:
         return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10]
-    elif len(players) == 9:
+    elif numplayers == 9:
         return [0, 1, 2, 3, 4, 5, 6, 8, 10]
-    elif len(players) == 8:
+    elif numplayers == 8:
         return [0, 1, 2, 3, 4, 5, 7, 9]
-
-def fails_constraints(curlineup, lineups):
-    for lineup in lineups:
-        for i, player in enumerate(lineup):
-            if player == curlineup[i]:
-                return True
-    return False
+    elif numplayers == 7:
+        return [0, 1, 2, 3, 4, 5, 8]
+    elif numplayers == 6:
+        return [0, 1, 2, 3, 4, 5]
 
 def update_players(players, bestlineup, lineupconfig):
     for i, player in enumerate(bestlineup):
         pos = lineupconfig[i]
-        players[player][pos] += 1
+        players[player][pos] = float('inf')
     return players
 
 def main():
     players = get_players()
     players = prune_players(players)
-    lineupconfig = configure_lineup(players)
+    numplayers = len(players)
+    lineupconfig = configure_lineup(numplayers)
     numlineups = int(raw_input("How many lineups? ").strip())
     lineups = []
+    innings = [0 for i in range(numplayers)]
     for inning in range(numlineups):
         bestsum = float('inf')
         bestmax = float('inf')
         print "Processing {:,} lineups of {} players: ".format(math.factorial(len(players)), len(players)) + str(players.keys())
         for curlineup in itertools.permutations(players):
-            if fails_constraints(curlineup, lineups):
-                continue
-            innings = []
             for i, player in enumerate(curlineup):
                 pos = lineupconfig[i]
-                innings.append(players[player][pos])
+                innings[i] = players[player][pos]
             cursum = sum(innings)
             curmax = max(innings)
             if cursum > bestsum:
