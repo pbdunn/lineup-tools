@@ -1,62 +1,44 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import itertools
 import math
 import random
+import os.path
 
-import httplib2
-import os
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
-from apiclient import discovery
-from oauth2client import client
-from oauth2client import tools
-from oauth2client.file import Storage
-
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
-
-# If modifying these scopes, delete your previously saved credentials
-# at ~/.credentials/sheets.googleapis.com-python-quickstart.json
-SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
-CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Google Sheets API Python Quickstart'
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SPREADSHEET_ID = '1ZM7_0IXk5sfDY1YsTJSPVNJQWYV_H8gnjm7OwN3zAsc'
+RANGE_NAME = 'Offense!B2:M13'
 
 def get_credentials():
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, '.credentials')
-    if not os.path.exists(credential_dir):
-        os.makedirs(credential_dir)
-    credential_path = os.path.join(credential_dir,
-                                   'sheets.googleapis.com-python-quickstart.json')
-    store = Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
-        flow.user_agent = APPLICATION_NAME
-        if flags:
-            credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
-    return credentials
+    creds = None
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+    return creds
 
 def get_players():
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
-                    'version=v4')
-    service = discovery.build('sheets', 'v4', http=http,
-                              discoveryServiceUrl=discoveryUrl)
-    spreadsheetId = '1rYfknccqzbA_hI2lpq7NoabSCHlS3fr9QY6pDfD2Eho'
-    rangeName = 'Offense!B2:P14'
-    result = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheetId, range=rangeName).execute()
+    creds = get_credentials()
+    service = build('sheets', 'v4', credentials=creds)
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
+                                range=RANGE_NAME).execute()
     values = result.get('values', [])
     if not values:
-        print "No data found"
+        print("No data found")
     else:
         players = {}
         for row in values:
@@ -67,8 +49,8 @@ def get_players():
     return players
 
 def prune_players(players):
-    for player in players.keys():
-        answer = str(raw_input("Include {} [y/n]? ".format(player))).lower().strip()
+    for player in list(players.keys()):
+        answer = str(input("Include {} [y/n]? ".format(player))).lower().strip()
         if not answer[0] == 'y':
             del players[player]
     return players
@@ -80,7 +62,7 @@ def main():
     bestmax = float('inf')
     bestfirst = float('inf')
     bestlast = float('inf')
-    print "Processing {:,} lineups of {} players: ".format(math.factorial(len(players)), len(players)) + str(players.keys())
+    print("Processing {:,} lineups of {} players: ".format(math.factorial(len(players)), len(players)) + str(list(players.keys())))
     for curlineup in itertools.permutations(players):
         innings = []
         for pos, player in enumerate(curlineup):
@@ -109,7 +91,7 @@ def main():
         bestlast = curlast
         bestfirst = curfirst
         bestlineup = curlineup
-        print "New Best Lineup: " + str(bestlineup) + " Sum: " + str(bestsum) + " Max: " + str(bestmax) + " Last: " + str(bestlast) + " First: " + str(bestfirst)
+        print("New Best Lineup: " + str(bestlineup) + " Sum: " + str(bestsum) + " Max: " + str(bestmax) + " Last: " + str(bestlast) + " First: " + str(bestfirst))
 
 if __name__ == '__main__':
     main()
