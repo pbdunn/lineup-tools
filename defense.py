@@ -57,13 +57,13 @@ def prune_players(players):
 
 def configure_lineup(numplayers):
     if numplayers == 13:
-        return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 11, 11]
+        return [0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 11, 11, 11]
     elif numplayers == 12:
-        return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 11]
+        return [0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 11, 11]
     elif numplayers == 11:
-        return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11]
+        return [0, 1, 2, 3, 4, 5, 6, 8, 10, 11, 11]
     elif numplayers == 10:
-        return [0, 1, 2, 3, 4, 5, 6, 7, 9, 10]
+        return [0, 1, 2, 3, 4, 5, 6, 8, 10, 11]
     elif numplayers == 9:
         return [0, 1, 2, 3, 4, 5, 6, 8, 10]
     elif numplayers == 8:
@@ -76,7 +76,10 @@ def configure_lineup(numplayers):
 def update_players(players, bestlineup, lineupconfig):
     for i, player in enumerate(bestlineup):
         pos = lineupconfig[i]
-        players[player][pos] = float('inf')
+        if pos:
+            players[player][pos] += 1
+        else:
+            players[player][pos] = float('inf')
     return players
 
 def main():
